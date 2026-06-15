@@ -1,6 +1,6 @@
 $targetDir = "C:\openjdk17"
 $zipPath = "$env:TEMP\openjdk17.zip"
-$downloadUrl = "https://zzy.lcxa.online/files/openjdk17.zip"
+$downloadUrl = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.11_9.zip"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Starting Java 17 environment setup..." -ForegroundColor Cyan
@@ -17,14 +17,8 @@ Write-Host "Downloading OpenJDK 17 package..." -ForegroundColor Green
 try {
     Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -ErrorAction Stop
 } catch {
-    Write-Host "Primary download failed. Trying backup..." -ForegroundColor Yellow
-    $backupUrl = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.11_9.zip"
-    try {
-        Invoke-WebRequest -Uri $backupUrl -OutFile $zipPath -ErrorAction Stop
-    } catch {
-        Write-Host "Download failed from all sources." -ForegroundColor Red
-        Exit 1
-    }
+    Write-Host "Download failed from official source." -ForegroundColor Red
+    Exit 1
 }
 
 Write-Host "Extracting files..." -ForegroundColor Green
