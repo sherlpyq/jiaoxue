@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body>
     <header class="navbar">
@@ -16,19 +16,20 @@
         </div>
         <div class="nav-actions">
             <button class="btn btn-secondary" id="theme-toggle">切换主题</button>
-            <button class="btn btn-primary" id="open-config-btn">配置仓库</button>
+            <button class="btn btn-primary" id="admin-login-btn">管理员登录</button>
+            <button class="btn btn-outline" id="admin-logout-btn" style="display: none;">退出管理</button>
         </div>
     </header>
 
     <main class="container">
         <section class="drive-header">
             <div class="header-left">
-                <h1 class="page-title">我的云盘</h1>
-                <p class="repo-info" id="current-repo-display">当前关联仓库: 未配置</p>
+                <h1 class="page-title">共享资源库</h1>
+                <p class="repo-info" id="current-mode-badge">访客只读模式</p>
             </div>
             <div class="header-right">
                 <div class="storage-info">
-                    <span class="storage-text" id="storage-usage-text">已加载 0 个文件</span>
+                    <span class="storage-text" id="storage-usage-text">正在加载文件...</span>
                     <div class="storage-bar">
                         <div class="storage-fill" id="storage-usage-bar" style="width: 0%;"></div>
                     </div>
@@ -36,7 +37,7 @@
             </div>
         </section>
 
-        <section class="upload-area" id="drop-zone">
+        <section class="upload-area" id="drop-zone" style="display: none;">
             <input type="file" id="file-input" multiple style="display: none;">
             <div class="upload-icon"></div>
             <h3>拖拽文件到此处，或 <span class="upload-link" id="select-files-trigger">点击浏览</span></h3>
@@ -65,14 +66,14 @@
         </section>
 
         <section class="files-container">
-            <div class="loading-state" id="loading-spinner" style="display: none;">
+            <div class="loading-state" id="loading-spinner">
                 <div class="spinner"></div>
-                <p>正在拉取文件列表...</p>
+                <p>正在拉取资源列表...</p>
             </div>
-            <div class="empty-state" id="empty-state">
+            <div class="empty-state" id="empty-state" style="display: none;">
                 <div class="empty-icon"></div>
-                <h3>暂无文件</h3>
-                <p>请点击上方配置仓库，或直接拖入文件开始上传</p>
+                <h3>暂无共享资源</h3>
+                <p>管理员尚未上传任何文件</p>
             </div>
             <div class="files-grid" id="files-grid"></div>
         </section>
@@ -81,35 +82,19 @@
     <div class="modal" id="config-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>GitHub 仓库配置</h2>
+                <h2>管理员身份验证</h2>
                 <button class="close-btn" id="close-config-btn">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="config-username">GitHub 用户名</label>
-                    <input type="text" id="config-username" placeholder="例如: sherlpyq">
-                </div>
-                <div class="form-group">
-                    <label for="config-repo">仓库名称</label>
-                    <input type="text" id="config-repo" placeholder="例如: jiaoxue">
-                </div>
-                <div class="form-group">
-                    <label for="config-branch">分支名称</label>
-                    <input type="text" id="config-branch" placeholder="默认: main" value="main">
-                </div>
-                <div class="form-group">
-                    <label for="config-path">存储目录</label>
-                    <input type="text" id="config-path" placeholder="例如: files" value="files">
-                </div>
-                <div class="form-group">
                     <label for="config-token">GitHub 访问令牌 (Personal Access Token)</label>
-                    <input type="password" id="config-token" placeholder="输入 ghp_ 开头的口令以支持文件上传">
-                    <span class="help-text">口令仅保存在本地浏览器中，绝对不会上传第三方服务器。</span>
+                    <input type="password" id="config-token" placeholder="请输入您的 ghp_ 口令进行管理授权">
+                    <span class="help-text">口令仅保存在本地浏览器中，用于调用 GitHub API 写入文件，绝不上传第三方。</span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancel-config-btn">取消</button>
-                <button class="btn btn-primary" id="save-config-btn">保存配置</button>
+                <button class="btn btn-primary" id="save-config-btn">登录并验证</button>
             </div>
         </div>
     </div>
@@ -118,10 +103,10 @@
 
     <footer class="footer">
         <div class="footer-bottom">
-            <p>&copy; 2026 极光云盘. 数据完全托管于您的 GitHub 仓库.</p>
+            <p>&copy; 2026 极光云盘. 极速、绿色的文件共享站点.</p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=2.0"></script>
 </body>
 </html>

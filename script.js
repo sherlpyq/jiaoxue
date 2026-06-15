@@ -16,31 +16,25 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-let config = {
-    username: localStorage.getItem('drive_username') || '',
-    repo: localStorage.getItem('drive_repo') || '',
-    branch: localStorage.getItem('drive_branch') || 'main',
-    path: localStorage.getItem('drive_path') || 'files',
-    token: localStorage.getItem('drive_token') || ''
-};
+const DEFAULT_USER = 'sherlpyq';
+const DEFAULT_REPO = 'jiaoxue';
+const DEFAULT_BRANCH = 'main';
+const DEFAULT_PATH = 'files';
 
+let adminToken = localStorage.getItem('admin_token') || '';
 let allFiles = [];
 let currentFilter = 'all';
 let searchQuery = '';
 
 const configModal = document.getElementById('config-modal');
-const openConfigBtn = document.getElementById('open-config-btn');
+const adminLoginBtn = document.getElementById('admin-login-btn');
+const adminLogoutBtn = document.getElementById('admin-logout-btn');
 const closeConfigBtn = document.getElementById('close-config-btn');
 const cancelConfigBtn = document.getElementById('cancel-config-btn');
 const saveConfigBtn = document.getElementById('save-config-btn');
-
-const configUsernameInput = document.getElementById('config-username');
-const configRepoInput = document.getElementById('config-repo');
-const configBranchInput = document.getElementById('config-branch');
-const configPathInput = document.getElementById('config-path');
 const configTokenInput = document.getElementById('config-token');
 
-const currentRepoDisplay = document.getElementById('current-repo-display');
+const currentModeBadge = document.getElementById('current-mode-badge');
 const storageUsageText = document.getElementById('storage-usage-text');
 const storageUsageBar = document.getElementById('storage-usage-bar');
 
@@ -75,54 +69,76 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-function updateUIStatus() {
-    if (config.username && config.repo) {
-        currentRepoDisplay.textContent = `当前关联仓库: ${config.username}/${config.repo} (分支: ${config.branch}, 目录: ${config.path})`;
-        if (config.token) {
-            openConfigBtn.textContent = '修改配置';
-        } else {
-            openConfigBtn.textContent = '配置 Token';
-        }
+function updateAdminUI() {
+    if (adminToken) {
+        document.body.classList.add('admin-mode');
+        dropZone.style.display = 'block';
+        adminLoginBtn.style.display = 'none';
+        adminLogoutBtn.style.display = 'block';
+        currentModeBadge.textContent = '管理员维护模式';
+        currentModeBadge.style.color = 'var(--accent-primary)';
     } else {
-        currentRepoDisplay.textContent = '当前关联仓库: 未配置';
-        openConfigBtn.textContent = '配置仓库';
+        document.body.classList.remove('admin-mode');
+        dropZone.style.display = 'none';
+        adminLoginBtn.style.display = 'block';
+        adminLogoutBtn.style.display = 'none';
+        currentModeBadge.textContent = '访客只读模式';
+        currentModeBadge.style.color = 'var(--text-secondary)';
     }
 }
 
-function openModal() {
-    configUsernameInput.value = config.username;
-    configRepoInput.value = config.repo;
-    configBranchInput.value = config.branch;
-    configPathInput.value = config.path;
-    configTokenInput.value = config.token;
+adminLoginBtn.addEventListener('click', () => {
+    configTokenInput.value = adminToken;
     configModal.classList.add('active');
-}
+});
 
-function closeModal() {
-    configModal.classList.remove('active');
-}
+closeConfigBtn.addEventListener('click', () => configModal.classList.remove('active'));
+cancelConfigBtn.addEventListener('click', () => configModal.classList.remove('active'));
 
-openConfigBtn.addEventListener('click', openModal);
-closeConfigBtn.addEventListener('click', closeModal);
-cancelConfigBtn.addEventListener('click', closeModal);
-
-saveConfigBtn.addEventListener('click', () => {
-    config.username = configUsernameInput.value.trim();
-    config.repo = configRepoInput.value.trim();
-    config.branch = configBranchInput.value.trim() || 'main';
-    config.path = configPathInput.value.trim() || 'files';
-    config.token = configTokenInput.value.trim();
-
-    localStorage.setItem('drive_username', config.username);
-    localStorage.setItem('drive_repo', config.repo);
-    localStorage.setItem('drive_branch', config.branch);
-    localStorage.setItem('drive_path', config.path);
-    localStorage.setItem('drive_token', config.token);
-
-    closeModal();
-    updateUIStatus();
-    showToast('配置已保存');
+adminLogoutBtn.addEventListener('click', () => {
+    adminToken = '';
+    localStorage.removeItem('admin_token');
+    updateAdminUI();
+    showToast('已退出管理员模式');
     fetchFileList();
+});
+
+saveConfigBtn.addEventListener('click', async () => {
+    const tokenInputVal = configTokenInput.value.trim();
+    if (!tokenInputVal) {
+        showToast('请输入访问令牌', 'error');
+        return;
+    }
+
+    saveConfigBtn.disabled = true;
+    saveConfigBtn.textContent = '正在验证...';
+
+    try {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${tokenInputVal}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('令牌验证失败');
+        }
+
+        const userData = await response.json();
+        adminToken = tokenInputVal;
+        localStorage.setItem('admin_token', adminToken);
+        
+        configModal.classList.remove('active');
+        updateAdminUI();
+        showToast(`验证成功，欢迎管理员: ${userData.login || 'Admin'}`);
+        fetchFileList();
+    } catch (error) {
+        console.error(error);
+        showToast('令牌无效或网络错误，请重新输入', 'error');
+    } finally {
+        saveConfigBtn.disabled = false;
+        saveConfigBtn.textContent = '登录并验证';
+    }
 });
 
 function getFileType(filename) {
@@ -130,7 +146,7 @@ function getFileType(filename) {
     if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext)) {
         return 'image';
     }
-    if (['pdf', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'txt'].includes(ext)) {
+    if (['pdf', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
         return 'doc';
     }
     return 'other';
@@ -146,21 +162,14 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 async function fetchFileList() {
-    if (!config.username || !config.repo) {
-        emptyState.style.display = 'flex';
-        filesGrid.style.display = 'none';
-        loadingSpinner.style.display = 'none';
-        return;
-    }
-
     loadingSpinner.style.display = 'flex';
     emptyState.style.display = 'none';
     filesGrid.style.display = 'none';
 
-    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.path}?ref=${config.branch}`;
+    const url = `https://api.github.com/repos/${DEFAULT_USER}/${DEFAULT_REPO}/contents/${DEFAULT_PATH}?ref=${DEFAULT_BRANCH}`;
     const headers = {};
-    if (config.token) {
-        headers['Authorization'] = `token ${config.token}`;
+    if (adminToken) {
+        headers['Authorization'] = `token ${adminToken}`;
     }
 
     try {
@@ -184,7 +193,7 @@ async function fetchFileList() {
         renderFiles();
     } catch (error) {
         console.error(error);
-        showToast('拉取文件列表失败，请检查配置或 Token 是否正确', 'error');
+        showToast('获取共享资源列表失败，请检查网络或配置', 'error');
         loadingSpinner.style.display = 'none';
         emptyState.style.display = 'flex';
     }
@@ -203,7 +212,7 @@ function renderFiles() {
 
     storageUsageText.textContent = `已加载 ${allFiles.length} 个文件`;
     const percent = Math.min((allFiles.length / 100) * 100, 100);
-    storageUsageBar.style.style = `width: ${percent}%;`;
+    storageUsageBar.style.width = `${percent}%`;
 
     if (filtered.length === 0) {
         emptyState.style.display = 'flex';
@@ -259,7 +268,7 @@ function renderFiles() {
         downloadBtn.textContent = '下载';
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-outline btn-card';
+        deleteBtn.className = 'btn btn-outline btn-card btn-delete';
         deleteBtn.textContent = '删除';
         deleteBtn.addEventListener('click', () => deleteFile(file.path, file.sha));
 
@@ -277,28 +286,27 @@ function renderFiles() {
 }
 
 async function deleteFile(filePath, sha) {
-    if (!config.token) {
-        showToast('需要配置 GitHub Token 才能删除文件', 'error');
-        openModal();
+    if (!adminToken) {
+        showToast('未检测到管理员身份，无法删除', 'error');
         return;
     }
 
-    if (!confirm('确定要删除这个文件吗？')) {
+    if (!confirm('确定要从云端删除这个文件吗？')) {
         return;
     }
 
-    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${filePath}`;
+    const url = `https://api.github.com/repos/${DEFAULT_USER}/${DEFAULT_REPO}/contents/${filePath}`;
     const body = {
         message: 'Delete file via Aura Drive',
         sha: sha,
-        branch: config.branch
+        branch: DEFAULT_BRANCH
     };
 
     try {
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
-                'Authorization': `token ${config.token}`,
+                'Authorization': `token ${adminToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(body)
@@ -308,23 +316,17 @@ async function deleteFile(filePath, sha) {
             throw new Error(`HTTP 错误: ${response.status}`);
         }
 
-        showToast('文件已删除');
+        showToast('文件已成功删除');
         fetchFileList();
     } catch (error) {
         console.error(error);
-        showToast('删除文件失败，请重试', 'error');
+        showToast('删除失败，请检查令牌权限', 'error');
     }
 }
 
 async function uploadFiles(files) {
-    if (!config.username || !config.repo) {
-        showToast('请先配置仓库信息', 'error');
-        openModal();
-        return;
-    }
-    if (!config.token) {
-        showToast('请配置 GitHub Token 以支持文件上传', 'error');
-        openModal();
+    if (!adminToken) {
+        showToast('需要管理员身份才能上传文件', 'error');
         return;
     }
 
@@ -378,17 +380,17 @@ function fileToBase64(file) {
 }
 
 async function uploadSingleFile(filename, base64Content) {
-    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.path}/${filename}`;
+    const url = `https://api.github.com/repos/${DEFAULT_USER}/${DEFAULT_REPO}/contents/${DEFAULT_PATH}/${filename}`;
     const body = {
         message: 'Upload file via Aura Drive',
         content: base64Content,
-        branch: config.branch
+        branch: DEFAULT_BRANCH
     };
 
     const response = await fetch(url, {
         method: 'PUT',
         headers: {
-            'Authorization': `token ${config.token}`,
+            'Authorization': `token ${adminToken}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -447,5 +449,5 @@ filterImage.addEventListener('click', () => handleFilterClick('image', filterIma
 filterDoc.addEventListener('click', () => handleFilterClick('doc', filterDoc));
 filterOther.addEventListener('click', () => handleFilterClick('other', filterOther));
 
-updateUIStatus();
+updateAdminUI();
 fetchFileList();
