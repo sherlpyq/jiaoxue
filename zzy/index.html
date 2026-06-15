@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极光云盘 - 管理后台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css?v=2.0">
+    <style>
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 140px);
+            padding: 20px;
+        }
+        .login-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+        .login-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .login-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .logged-out .admin-dashboard {
+            display: none;
+        }
+        .logged-in .login-screen {
+            display: none;
+        }
+        .logged-in .admin-dashboard {
+            display: block;
+        }
+    </style>
+</head>
+<body class="logged-out">
+    <header class="navbar">
+        <div class="logo">
+            <span class="logo-accent">Aura</span>Drive Admin
+        </div>
+        <div class="nav-actions">
+            <button class="btn btn-secondary" id="theme-toggle">切换主题</button>
+            <button class="btn btn-outline" id="admin-logout-btn" style="display: none;">退出管理</button>
+            <a href="../" class="btn btn-secondary">返回主站</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="login-screen">
+            <div class="login-card">
+                <h2>管理员身份验证</h2>
+                <p>请输入您的 GitHub Personal Access Token 口令以管理共享库文件</p>
+                <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
+                    <label for="admin-token-input">GitHub 访问令牌</label>
+                    <input type="password" id="admin-token-input" placeholder="请输入 ghp_ 开头的口令" style="width: 100%;">
+                    <span class="help-text" style="margin-top: 0.5rem; display: block;">此 Token 仅保存在您当前浏览器的本地存储中，保证安全。</span>
+                </div>
+                <button class="btn btn-primary" id="admin-login-submit" style="width: 100%; padding: 0.8rem;">登录并授权</button>
+            </div>
+        </section>
+
+        <section class="admin-dashboard">
+            <section class="drive-header">
+                <div class="header-left">
+                    <h1 class="page-title">云盘管理后台</h1>
+                    <p class="repo-info" style="color: var(--accent-primary);">管理员维护模式 (已授权)</p>
+                </div>
+                <div class="header-right">
+                    <div class="storage-info">
+                        <span class="storage-text" id="storage-usage-text">正在加载文件...</span>
+                        <div class="storage-bar">
+                            <div class="storage-fill" id="storage-usage-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="upload-area" id="drop-zone">
+                <input type="file" id="file-input" multiple style="display: none;">
+                <div class="upload-icon"></div>
+                <h3>拖拽文件到此处，或 <span class="upload-link" id="select-files-trigger">点击浏览</span></h3>
+                <p>支持多文件上传，单个文件大小建议不超过 25MB</p>
+                <div id="upload-progress-container" class="upload-progress-container" style="display: none;">
+                    <div class="progress-info">
+                        <span id="upload-status-text">正在准备上传...</span>
+                        <span id="upload-percentage-text">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-thumb" id="upload-progress-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="files-control-bar">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="搜索文件...">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-secondary btn-icon active" id="filter-all">全部</button>
+                    <button class="btn btn-secondary btn-icon" id="filter-image">图片</button>
+                    <button class="btn btn-secondary btn-icon" id="filter-doc">文档</button>
+                    <button class="btn btn-secondary btn-icon" id="filter-other">其他</button>
+                </div>
+            </section>
+
+            <section class="files-container">
+                <div class="loading-state" id="loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在拉取文件列表...</p>
+                </div>
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon"></div>
+                    <h3>暂无共享文件</h3>
+                    <p>您可以拖拽文件至上方开始上传首个共享文件</p>
+                </div>
+                <div class="files-grid" id="files-grid"></div>
+            </section>
+        </section>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>&copy; 2026 极光云盘. 极速、绿色的文件共享站点.</p>
+        </div>
+    </footer>
+
+    <script src="admin.js?v=2.0"></script>
+</body>
+</html>

@@ -16,8 +16,6 @@
         </div>
         <div class="nav-actions">
             <button class="btn btn-secondary" id="theme-toggle">切换主题</button>
-            <button class="btn btn-primary" id="admin-login-btn">管理员登录</button>
-            <button class="btn btn-outline" id="admin-logout-btn" style="display: none;">退出管理</button>
         </div>
     </header>
 
@@ -25,7 +23,7 @@
         <section class="drive-header">
             <div class="header-left">
                 <h1 class="page-title">共享资源库</h1>
-                <p class="repo-info" id="current-mode-badge">访客只读模式</p>
+                <p class="repo-info">访客公共下载通道</p>
             </div>
             <div class="header-right">
                 <div class="storage-info">
@@ -33,22 +31,6 @@
                     <div class="storage-bar">
                         <div class="storage-fill" id="storage-usage-bar" style="width: 0%;"></div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="upload-area" id="drop-zone" style="display: none;">
-            <input type="file" id="file-input" multiple style="display: none;">
-            <div class="upload-icon"></div>
-            <h3>拖拽文件到此处，或 <span class="upload-link" id="select-files-trigger">点击浏览</span></h3>
-            <p>支持多文件上传，单个文件大小建议不超过 25MB</p>
-            <div id="upload-progress-container" class="upload-progress-container" style="display: none;">
-                <div class="progress-info">
-                    <span id="upload-status-text">正在准备上传...</span>
-                    <span id="upload-percentage-text">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-thumb" id="upload-progress-bar" style="width: 0%;"></div>
                 </div>
             </div>
         </section>
@@ -78,26 +60,6 @@
             <div class="files-grid" id="files-grid"></div>
         </section>
     </main>
-
-    <div class="modal" id="config-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>管理员身份验证</h2>
-                <button class="close-btn" id="close-config-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="config-token">GitHub 访问令牌 (Personal Access Token)</label>
-                    <input type="password" id="config-token" placeholder="请输入您的 ghp_ 口令进行管理授权">
-                    <span class="help-text">口令仅保存在本地浏览器中，用于调用 GitHub API 写入文件，绝不上传第三方。</span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancel-config-btn">取消</button>
-                <button class="btn btn-primary" id="save-config-btn">登录并验证</button>
-            </div>
-        </div>
-    </div>
 
     <div class="toast-container" id="toast-container"></div>
 
